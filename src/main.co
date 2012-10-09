@@ -4,19 +4,26 @@ child_process = require 'child_process'
   child = child_process.spawn cmd, args
   stdout = []
   stderr = []
+  child.stdout.setEncoding('utf8')
   child.stdout.on 'data', !(data) ->
     stdout.push data
+  child.stderr.setEncoding('utf8')
   child.stderr.on 'data', !(data) ->
     stderr.push data
   child.on 'exit', !(code) ->
-    return cb(stdout.join('') + stderr.join '') if code is not 0
+    if code is not 0
+      err = new Error("mutagen child process exited with error code")
+      err.stdout = stdout.join('')
+      err.stderr = stderr.join('')
+      return cb(err)
     cb null, stdout.join ''
 
 const read_program = """
   import sys,json,mutagen
   print(json.dumps(dict(mutagen.File(sys.argv[1], easy=True))))
 """
-module.exports.read = read = !(file, cb) ->
+
+export !function read (file, cb)
   run_child 'python', ['-c', read_program, file], (err, stdout) ->
     return cb(err) if err
     cb null, JSON.parse stdout
@@ -31,7 +38,8 @@ const edit_program = """
       del f[name]
   f.save()
 """
-module.exports.edit = edit = !(file, edits, cb) ->
+
+export !function edit (file, edits, cb)
   args = ['-c', edit_program, file]
   for key, value in edits
     args.push key
