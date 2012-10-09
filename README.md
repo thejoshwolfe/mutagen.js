@@ -4,6 +4,7 @@ mutagen.js
 npm package wrapping the [mutagen](http://code.google.com/p/mutagen/) library.
 
     var mutagen = require('mutagen');
+    // reading tags
     mutagen.read('path/to/file.mp3', function(err, tags) {
         if (err) {
             return console.log(err);
@@ -16,10 +17,24 @@ npm package wrapping the [mutagen](http://code.google.com/p/mutagen/) library.
         console.log(tags);
     });
 
-Requies that you already have mutagen installed. Check with this command:
+    // editing tags
+    var edits = {
+        artist: 'New Artist',
+        // falsy values indicate deletion:
+        album: '',
+        // any unmentioned tags will be unaffected.
+    };
+    mutagen.edit('path/to/file.mp3', edits, function(err) {
+        if (err) {
+            return console.log(err);
+        }
+        console.log('done');
+    });
+
+This package requies that you already have mutagen installed. Check with this command:
 
     python -c "import mutagen"
 
-If you don't, try this in Ubuntu:
+If you get an ImportError, try this in Ubuntu:
 
     sudo apt-get install python-mutagen

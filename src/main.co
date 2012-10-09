@@ -1,9 +1,7 @@
 child_process = require 'child_process'
 
-const entire_program = "import sys,json,mutagen; print(json.dumps(dict(mutagen.File(sys.argv[1], easy=True))))"
-
-module.exports.read = read = !(file, cb) ->
-  child = child_process.spawn 'python' ['-c', entire_program, file]
+!function run_child(cmd, args, cb)
+  child = child_process.spawn cmd, args
   stdout = []
   stderr = []
   child.stdout.on 'data', !(data) ->
@@ -11,18 +9,62 @@ module.exports.read = read = !(file, cb) ->
   child.stderr.on 'data', !(data) ->
     stderr.push data
   child.on 'exit', !(code) ->
-    return cb(stderr.join '') if code is not 0
-    cb null, JSON.parse stdout.join ''
+    return cb(stdout.join('') + stderr.join '') if code is not 0
+    cb null, stdout.join ''
+
+const read_program = """
+  import sys,json,mutagen
+  print(json.dumps(dict(mutagen.File(sys.argv[1], easy=True))))
+"""
+module.exports.read = read = !(file, cb) ->
+  run_child 'python', ['-c', read_program, file], (err, stdout) ->
+    return cb(err) if err
+    cb null, JSON.parse stdout
+
+const edit_program = """
+  import sys,mutagen
+  f = mutagen.File(sys.argv[1], easy=True)
+  for name, value in zip(*[iter(sys.argv[2:])]*2):
+    if value != "":
+      f[name] = value
+    else:
+      del f[name]
+  f.save()
+"""
+module.exports.edit = edit = !(file, edits, cb) ->
+  args = ['-c', edit_program, file]
+  for key, value in edits
+    args.push key
+    value = "" unless value?
+    args.push value
+  run_child 'python', args, cb
 
 if require.main is module
-  # main function is to read a single file
-  args = process.argv.slice 2
-  if args.length is not 1
-    console.log "Usage: path-to-file"
+  usage = !->
+    console.log """
+      Usage: read path-to-file
+      Usgae: edit path-to-file key=value ...
+    """
     process.exit 1
-  read args[0], (err, json) ->
-    if err
-      console.log err
-      process.exit 1
-    console.log json
+  args = process.argv.slice 2
+  command = args.shift!
+  file = args.shift!
+  usage! unless file
+  check_error = !(err) ->
+    return unless err
+    console.log err
+    process.exit 1
+  switch command
+    case "read"
+      read file, !(err, json) ->
+        check_error err
+        console.log json
+    case "edit"
+      edits = {}
+      for arg of args
+        [key, value] = arg.split("=")
+        edits[key] = value
+      edit file, edits, check_error
+    default
+      usage!
 
