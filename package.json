@@ -2,7 +2,7 @@
   "name": "mutagen",
   "version": "0.0.1",
   "description": "wrapper around the mutagen library",
-  "main": "lib/cmd.js",
+  "main": "lib/main.js",
   "engines": {
     "node": "~0.8.0"
   },
