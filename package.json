@@ -1,0 +1,23 @@
+{
+  "name": "mutagen",
+  "version": "0.0.0",
+  "description": "wrapper around the mutagen library",
+  "main": "lib/cmd.js",
+  "engines": {
+    "node": "~0.8.0"
+  },
+  "scripts": {
+    "dev": "npm install && coco -wco lib/ src/",
+    "build": "npm install && coco -co lib/ src/",
+    "clean": "rm -rf lib/"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/thejoshwolfe/mutagen.js.git"
+  },
+  "author": "Josh Wolfe",
+  "license": "MIT",
+  "devDependencies": {
+    "coco": "~0.8.0"
+  }
+}
