@@ -3,8 +3,8 @@ mutagen.js
 
 npm package wrapping the [mutagen](http://code.google.com/p/mutagen/) library.
 
-    mutagen = require('mutagen');
-    mutage.read('path/to/file.mp3', function(err, tags) {
+    var mutagen = require('mutagen');
+    mutagen.read('path/to/file.mp3', function(err, tags) {
         if (err) {
             return console.log(err);
         }
@@ -16,3 +16,10 @@ npm package wrapping the [mutagen](http://code.google.com/p/mutagen/) library.
         console.log(tags);
     });
 
+Requies that you already have mutagen installed. Check with this command:
+
+    python -c "import mutagen"
+
+If you don't, try this in Ubuntu:
+
+    sudo apt-get install python-mutagen
