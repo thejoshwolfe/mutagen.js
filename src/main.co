@@ -4,13 +4,16 @@ child_process = require 'child_process'
   return unless err
   console.error err
 
-!function run_child(cmd, args, cb)
+!function run_child(cmd, args, stdin, cb)
   child = child_process.spawn cmd, args
 
   stderr = ""
   stdout = ""
-  child.stderr.setEncoding('utf8')
-  child.stdout.setEncoding('utf8')
+  child.stdin.setEncoding 'utf8'
+  child.stderr.setEncoding 'utf8'
+  child.stdout.setEncoding 'utf8'
+  child.stdin.write stdin
+  child.stdin.end!
   child.stderr.on 'data', !(data) -> stderr += data
   child.stdout.on 'data', !(data) -> stdout += data
   child.on 'close', !(return_code) ->
@@ -39,11 +42,12 @@ const read_program = """
       except KeyError:
         return json.JSONEncoder.default(self, obj)
       return func(obj)
-  print(json.dumps(dict(mutagen.File(sys.argv[1], easy=True) or {}), cls=CustomEncoder))
+  everything = [dict(mutagen.File(path, easy=True) or {}) for path in sys.stdin.read().split("\\n") if path != ""]
+  print(json.dumps(everything, cls=CustomEncoder))
 """
 
-export !function read (file, cb=noop)
-  run_child 'python', ['-c', read_program, file], (err, stdout) ->
+export !function read (files, cb=noop)
+  run_child 'python', ['-c', read_program], files.join('\n'), (err, stdout) ->
     return cb(err) if err
     cb null, JSON.parse stdout
 
@@ -64,7 +68,7 @@ export !function edit (file, edits, cb=noop)
     args.push key
     value = "" unless value?
     args.push value
-  run_child 'python', args, cb
+  run_child 'python', args, '', cb
 
 if require.main is module
   usage = !->
