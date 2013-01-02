@@ -1,6 +1,6 @@
 {
   "name": "mutagen",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "wrapper around the mutagen library",
   "main": "lib/main.js",
   "engines": {
