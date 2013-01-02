@@ -7,19 +7,19 @@ child_process = require 'child_process'
 !function run_child(cmd, args, cb)
   child = child_process.spawn cmd, args
 
-  stderr = []
-  stdout = []
+  stderr = ""
+  stdout = ""
   child.stderr.setEncoding('utf8')
   child.stdout.setEncoding('utf8')
-  child.stderr.on 'data', !(data) -> stderr.push(data)
-  child.stdout.on 'data', !(data) -> stdout.push(data)
+  child.stderr.on 'data', !(data) -> stderr += data
+  child.stdout.on 'data', !(data) -> stdout += data
   child.on 'close', !(return_code) ->
     if return_code is not 0
       err = new Error("mutagen child process exited with error code")
-      err.stdout = stdout.join('')
-      err.stderr = stderr.join('')
+      err.stdout = stdout
+      err.stderr = stderr
       return cb(err)
-    cb(null, stdout.join(''))
+    cb(null, stdout)
 
 
 const read_program = """
