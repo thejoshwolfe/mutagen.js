@@ -1,5 +1,9 @@
 child_process = require 'child_process'
 
+!function noop(err)
+  return unless err
+  console.error err
+
 !function run_child(cmd, args, cb)
   child = child_process.spawn cmd, args
 
@@ -19,17 +23,32 @@ child_process = require 'child_process'
 
 
 const read_program = """
-  import sys,json,mutagen
-  print(json.dumps(dict(mutagen.File(sys.argv[1], easy=True) or {})))
+  import sys, json, mutagen, mutagen.asf
+  class CustomEncoder(json.JSONEncoder):
+    def default(self, obj):
+      mappings = {
+        mutagen.asf.ASFUnicodeAttribute: unicode,
+        mutagen.asf.ASFBoolAttribute: bool,
+        mutagen.asf.ASFDWordAttribute: int,
+        mutagen.asf.ASFQWordAttribute: int,
+        mutagen.asf.ASFGUIDAttribute: (lambda obj: ""),
+        mutagen.asf.ASFByteArrayAttribute: (lambda obj: ""),
+      }
+      try:
+        func = mappings[type(obj)]
+      except KeyError:
+        return json.JSONEncoder.default(self, obj)
+      return func(obj)
+  print(json.dumps(dict(mutagen.File(sys.argv[1], easy=True) or {}), cls=CustomEncoder))
 """
 
-export !function read (file, cb)
+export !function read (file, cb=noop)
   run_child 'python', ['-c', read_program, file], (err, stdout) ->
     return cb(err) if err
     cb null, JSON.parse stdout
 
 const edit_program = """
-  import sys,mutagen
+  import sys, mutagen
   f = mutagen.File(sys.argv[1], easy=True)
   for name, value in zip(*[iter(sys.argv[2:])]*2):
     if value != "":
@@ -39,7 +58,7 @@ const edit_program = """
   f.save()
 """
 
-export !function edit (file, edits, cb)
+export !function edit (file, edits, cb=noop)
   args = ['-c', edit_program, file]
   for key, value in edits
     args.push key
