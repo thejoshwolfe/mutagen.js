@@ -5,11 +5,10 @@ npm package wrapping the [mutagen](http://code.google.com/p/mutagen/) library.
 ```javascript
 var mutagen = require('mutagen');
 // reading tags
-mutagen.read(['path/to/file.mp3'], function(err, tagses) {
+mutagen.read('path/to/file.mp3', function(err, tags) {
     if (err) {
         return console.log(err);
     }
-    var tags = tagses[0];
     console.log('Artist: ' + tags.artist[0]);
     console.log('Album: ' + tags.album[0]);
     console.log('Title: ' + tags.title[0]);
@@ -17,6 +16,8 @@ mutagen.read(['path/to/file.mp3'], function(err, tagses) {
     console.log('All Tags:');
     console.log(tags);
 });
+// read() can also take an array of files,
+// in which case tags will be a corresponding array.
 
 // editing tags
 var edits = {

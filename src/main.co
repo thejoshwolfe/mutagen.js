@@ -42,14 +42,24 @@ const read_program = """
       except KeyError:
         return json.JSONEncoder.default(self, obj)
       return func(obj)
-  everything = [dict(mutagen.File(path, easy=True) or {}) for path in sys.stdin.read().split("\\n") if path != ""]
+  def to_jsonable(audio):
+    if audio == None: return {}
+    result = dict(audio)
+    for key, value in audio.info.__dict__.items():
+      result["info/" + key] = value
+    return result
+  everything = [to_jsonable(mutagen.File(path, easy=True)) for path in sys.stdin.read().split("\\n") if path != ""]
   print(json.dumps(everything, cls=CustomEncoder))
 """
 
 export !function read (files, cb=noop)
+  single = typeof files is 'string'
+  files = [files] if single
   run_child 'python', ['-c', read_program], files.join('\n'), (err, stdout) ->
     return cb(err) if err
-    cb null, JSON.parse stdout
+    result = JSON.parse stdout
+    result = result[0] if single
+    cb null, result
 
 const edit_program = """
   import sys, mutagen
