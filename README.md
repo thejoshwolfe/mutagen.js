@@ -1,6 +1,8 @@
 mutagen.js
 ==========
 
+*NOTE: This project is no longer maintained.*
+
 npm package wrapping the [mutagen](http://code.google.com/p/mutagen/) library.
 ```javascript
 var mutagen = require('mutagen');
